@@ -3,12 +3,15 @@ package com.example.mranderson.behaviorsubjectvslivedata
 import android.arch.lifecycle.Observer
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var disposable: Disposable
+
+    private  val list = CompositeDisposable()
 
     private lateinit var api: Api
 
@@ -21,15 +24,6 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
         api = Api()
-        api.state.observe(this, Observer { state -> if (state != null && state) { showFragment() }})
-
-        disposable = api.apiStatusBehaviorSubject.subscribe { state ->
-            when (state) {
-                true -> {
-                    showFragment()
-                }
-            }
-        }
 
         LiveData.setOnClickListener {
             api.doACall()
@@ -42,14 +36,27 @@ class MainActivity : AppCompatActivity() {
         Clear.setOnClickListener {
             removeFragment()
         }
+
+        api.state.observe(this, Observer { state ->
+            if (state != null && state) {
+                showFragment()
+            }
+        })
+
+        disposable = api.apiStatusBehaviorSubject.subscribe { state ->
+            if (state) {
+                showFragment()
+            }
+        }
+        list.add(disposable)
     }
 
     private fun showFragment() {
         val fragment = MainFragment()
         supportFragmentManager
-            .beginTransaction()
-            .add(R.id.Fragment, fragment, "TAG")
-            .commit()
+                .beginTransaction()
+                .add(R.id.Fragment, fragment, "TAG")
+                .commit()
     }
 
     private fun removeFragment() {
@@ -60,8 +67,8 @@ class MainActivity : AppCompatActivity() {
                 .commit()
     }
 
-//    override fun onPause() {
-//        super.onPause()
-//        disposable.dispose()
-//    }
+    override fun onPause() {
+        super.onPause()
+        list.clear()
+    }
 }

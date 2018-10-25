@@ -6,8 +6,11 @@ import io.reactivex.subjects.BehaviorSubject
 
 class Api {
 
+    /**
+     * LiveData
+     */
+
     val state = MutableLiveData<Boolean>()
-    var apiStatusBehaviorSubject = BehaviorSubject.createDefault<Boolean>(false)
 
     init {
         state.value = false
@@ -15,9 +18,15 @@ class Api {
 
     fun doACall() {
         Handler().postDelayed({
-            state.postValue(true)
+            state.value = true
         }, 5000)
     }
+
+    /**
+     * BehaviorSubject
+     */
+
+    var apiStatusBehaviorSubject = BehaviorSubject.createDefault<Boolean>(false)
 
     fun doACallToo(){
         Handler().postDelayed({
